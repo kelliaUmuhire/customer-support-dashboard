@@ -11,7 +11,7 @@ const InquiryResponseForm: FC<InquiryResponseFormProps> = ({
 }) => {
   const [response, setResponse] = useState("");
 
-  const handleSubmitResponse = (e) => {
+  const handleSubmitResponse = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmitResponse(response);
     setResponse("");
