@@ -1,10 +1,10 @@
 import { FC, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "./Toolbar";
 import Pagination from "./Pagination";
 import Table from "./Table";
 import { sortData } from "../../../util/helpers";
 import { Inquiry } from "../../../util/api";
+import useQueryParams from "../../../hooks/useQueryParams";
 
 export interface SortConfig {
   key: string;
@@ -16,16 +16,13 @@ interface DataTableProps {
 }
 
 const DataTable: FC<DataTableProps> = ({ data }) => {
-  const navigate = useNavigate();
-  const { search } = useLocation();
+  const { query, setQueryParams } = useQueryParams();
 
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "",
     direction: "ascending",
   });
-  const [currentPage, setCurrentPage] = useState(() =>
-    parseInt(new URLSearchParams(search).get("page") || "1")
-  );
+  const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -46,7 +43,7 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
     return sortedData.slice(start, start + entriesPerPage);
   }, [sortedData, currentPage, entriesPerPage]);
 
-  const handleSort = (key: string) => {
+  const handleSort = (key: string) =>
     setSortConfig((prevConfig) => ({
       key,
       direction:
@@ -54,13 +51,19 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
           ? "descending"
           : "ascending",
     }));
-  };
 
   useEffect(() => {
-    const query = new URLSearchParams(search);
-    query.set("page", currentPage.toString());
-    navigate({ search: query.toString() }, { replace: true });
-  }, [currentPage]);
+    setQueryParams({ page: currentPage.toString(), search: searchQuery });
+  }, [currentPage, searchQuery, setQueryParams]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [entriesPerPage, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(parseInt(query.get("page") || "1"));
+    setSearchQuery(query.get("search") || "");
+  }, [query]);
 
   return (
     <div className="overflow-x-auto bg-white p-4 shadow-sm">
