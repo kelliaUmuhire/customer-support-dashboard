@@ -1,32 +1,32 @@
-import { FC, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { FC } from "react";
+import { Navigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import Title from "../components/ui/Title";
 import Status from "../components/ui/Status";
 import ResponseHistory from "../components/cards/ResponseHistory";
 import InquiryResponseForm from "../components/forms/InquiryResponse";
-import { Inquiry as InquiryType } from "../util/api";
+import BackButton from "../components/ui/BackButton";
+import { RootState, AppDispatch } from "../store";
+import { addResponse } from "../store/inquirySlice";
+import InfoItem from "../components/cards/InfoItem";
 
 const Inquiry: FC = () => {
-  const { state } = useLocation();
-  const [inquiry, setInquiry] = useState<InquiryType>(() => state);
+  const { id } = useParams();
+  const dispatch: AppDispatch = useDispatch();
+  const { inquiries } = useSelector((state: RootState) => state.inquiry);
+  const inquiry = inquiries.find((inquiry) => inquiry.id === `#${id}`);
 
   const onSubmitResponse = (newResponse: string) => {
-    setInquiry((prev) => ({
-      ...prev,
-      details: {
-        ...prev.details,
-        responses: [
-          ...prev.details.responses,
-          { message: newResponse, responseDate: new Date().toISOString() },
-        ],
-      },
-    }));
+    if (newResponse.trim() !== "" && id) {
+      dispatch(addResponse({ inquiryId: `#${id}`, message: newResponse }));
+    }
   };
 
-  if (!state) return <Navigate to="/" />;
+  if (!inquiry) return <Navigate to="/" />;
 
   return (
     <div>
+      <BackButton path="/" />
       <Title label="Inquiry Details" />
       <div className="bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-col items-start justify-between lg:flex-row">
@@ -38,14 +38,8 @@ const Inquiry: FC = () => {
             <Status status={inquiry.status} />
           </div>
         </div>
-        <div className="border-t py-4">
-          <h3 className="mb-2 font-semibold">Subject</h3>
-          <p className="text-sm">{inquiry.subject}</p>
-        </div>
-        <div className="border-t pt-4">
-          <h3 className="mb-2 font-semibold">Initial Message</h3>
-          <p className="text-sm">{inquiry.details.message}</p>
-        </div>
+        <InfoItem title="Subject" content={inquiry.subject} className="pb-4" />
+        <InfoItem title="Initial Message" content={inquiry.details.message} />
       </div>
 
       <ResponseHistory responses={inquiry.details.responses} />

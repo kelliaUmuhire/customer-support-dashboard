@@ -1,67 +1,74 @@
-import { Dispatch, FC, SetStateAction } from "react";
-import { useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "./Toolbar";
 import Pagination from "./Pagination";
-import { sortData } from "../../../util/helpers";
 import Table from "./Table";
+import { sortData } from "../../../util/helpers";
 import { Inquiry } from "../../../util/api";
 
 export interface SortConfig {
   key: string;
-  direction: string;
+  direction: "ascending" | "descending";
 }
 
 interface DataTableProps {
   data: Inquiry[];
-  setData: Dispatch<SetStateAction<Inquiry[]>>;
 }
 
-const DataTable: FC<DataTableProps> = ({ data, setData }) => {
+const DataTable: FC<DataTableProps> = ({ data }) => {
+  const navigate = useNavigate();
+  const { search } = useLocation();
+
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "",
-    direction: "",
+    direction: "ascending",
   });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() =>
+    parseInt(new URLSearchParams(search).get("page") || "1")
+  );
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredData = useMemo(
-    () =>
-      data.filter(
-        (inquiry) =>
-          inquiry.customerName
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          inquiry.subject.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
-    [data, searchQuery]
-  );
+  const filteredData = useMemo(() => {
+    if (!searchQuery) return data;
+    return data.filter((inquiry) =>
+      inquiry.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [data, searchQuery]);
 
-  const handleSort = (key: string) => {
-    const direction =
-      sortConfig.key === key && sortConfig.direction === "ascending"
-        ? "descending"
-        : "ascending";
-    setData(sortData(data, key, direction));
-    setSortConfig({ key, direction });
-  };
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return filteredData;
+    return sortData(filteredData, sortConfig.key, sortConfig.direction);
+  }, [filteredData, sortConfig]);
 
-  // Memoize total pages calculation
-  const totalPages = useMemo(
-    () => Math.ceil(data.length / entriesPerPage),
-    [data.length, entriesPerPage]
-  );
-
-  // Get current page data
   const currentData = useMemo(() => {
     const start = (currentPage - 1) * entriesPerPage;
-    return filteredData.slice(start, start + entriesPerPage);
-  }, [filteredData, currentPage, entriesPerPage]);
+    return sortedData.slice(start, start + entriesPerPage);
+  }, [sortedData, currentPage, entriesPerPage]);
+
+  const handleSort = (key: string) => {
+    setSortConfig((prevConfig) => ({
+      key,
+      direction:
+        prevConfig.key === key && prevConfig.direction === "ascending"
+          ? "descending"
+          : "ascending",
+    }));
+  };
+
+  useEffect(() => {
+    const query = new URLSearchParams(search);
+    query.set("page", currentPage.toString());
+    navigate({ search: query.toString() }, { replace: true });
+  }, [currentPage]);
 
   return (
     <div className="overflow-x-auto bg-white p-4 shadow-sm">
       <Toolbar
-        {...{ entriesPerPage, setEntriesPerPage, searchQuery, setSearchQuery }}
+        entriesPerPage={entriesPerPage}
+        setEntriesPerPage={setEntriesPerPage}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
       <Table
         data={currentData}
@@ -70,8 +77,8 @@ const DataTable: FC<DataTableProps> = ({ data, setData }) => {
       />
       <Pagination
         currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
+        totalPages={Math.ceil(sortedData.length / entriesPerPage)}
+        onPageChange={setCurrentPage}
       />
     </div>
   );

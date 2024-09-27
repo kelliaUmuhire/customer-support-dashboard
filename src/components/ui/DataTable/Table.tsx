@@ -50,7 +50,7 @@ const Table: FC<TableProps> = ({ data, sortConfig, handleSort }) => {
               <Status status={item.status} />
             </td>
             <td className="p-4 text-center">
-              <Link to={`/view/${item.id.slice(1)}`} state={item}>
+              <Link to={`/view/${item.id.slice(1)}`}>
                 <img
                   src="/icons/edit.svg"
                   alt="Edit"
