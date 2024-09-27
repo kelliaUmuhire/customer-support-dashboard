@@ -25,7 +25,9 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(() =>
     parseInt(query.get("page") || "1")
   );
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [entriesPerPage, setEntriesPerPage] = useState(() =>
+    parseInt(query.get("entries") || "10")
+  );
   const [searchQuery, setSearchQuery] = useState(
     () => query.get("search") || ""
   );
@@ -58,8 +60,12 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
   };
 
   useEffect(() => {
-    setQueryParams({ page: currentPage.toString(), search: searchQuery });
-  }, [currentPage, searchQuery]);
+    setQueryParams({
+      page: currentPage.toString(),
+      entries: entriesPerPage.toString(),
+      search: searchQuery,
+    });
+  }, [currentPage, searchQuery, entriesPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
