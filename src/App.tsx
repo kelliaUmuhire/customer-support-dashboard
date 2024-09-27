@@ -4,6 +4,8 @@ import DefaultLayout from "./layouts/Default";
 import Inquiries from "./pages";
 import Inquiry from "./pages/view";
 import Error from "./pages/404";
+import { Provider } from "react-redux";
+import store from "./store";
 
 const routes = createBrowserRouter([
   {
@@ -18,7 +20,11 @@ const routes = createBrowserRouter([
 ]);
 
 const App: FC = () => {
-  return <RouterProvider router={routes} />;
+  return (
+    <Provider store={store}>
+      <RouterProvider router={routes} />
+    </Provider>
+  );
 };
 
 export default App;
