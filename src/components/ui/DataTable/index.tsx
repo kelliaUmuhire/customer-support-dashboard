@@ -59,6 +59,15 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
     }));
   };
 
+  const handleSearchOrEntriesChange = (
+    field: string,
+    value: string | number
+  ) => {
+    if (field === "search") setSearchQuery(value as string);
+    else if (field === "entries") setEntriesPerPage(value as number);
+    setCurrentPage(1);
+  };
+
   useEffect(() => {
     setQueryParams({
       page: currentPage.toString(),
@@ -67,17 +76,12 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
     });
   }, [currentPage, searchQuery, entriesPerPage]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [entriesPerPage, searchQuery]);
-
   return (
     <div className="overflow-x-auto bg-white p-4 shadow-sm">
       <Toolbar
         entriesPerPage={entriesPerPage}
-        setEntriesPerPage={setEntriesPerPage}
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        onValueChange={handleSearchOrEntriesChange}
       />
       <Table
         data={currentData}
