@@ -22,9 +22,13 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
     key: "",
     direction: "ascending",
   });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() =>
+    parseInt(query.get("page") || "1")
+  );
   const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    () => query.get("search") || ""
+  );
 
   const filteredData = useMemo(() => {
     if (!searchQuery) return data;
@@ -43,7 +47,7 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
     return sortedData.slice(start, start + entriesPerPage);
   }, [sortedData, currentPage, entriesPerPage]);
 
-  const handleSort = (key: string) =>
+  const handleSort = (key: string) => {
     setSortConfig((prevConfig) => ({
       key,
       direction:
@@ -51,19 +55,15 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
           ? "descending"
           : "ascending",
     }));
+  };
 
   useEffect(() => {
     setQueryParams({ page: currentPage.toString(), search: searchQuery });
-  }, [currentPage, searchQuery, setQueryParams]);
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [entriesPerPage, searchQuery]);
-
-  useEffect(() => {
-    setCurrentPage(parseInt(query.get("page") || "1"));
-    setSearchQuery(query.get("search") || "");
-  }, [query]);
 
   return (
     <div className="overflow-x-auto bg-white p-4 shadow-sm">
