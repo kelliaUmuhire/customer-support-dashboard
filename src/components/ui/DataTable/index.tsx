@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Toolbar from "./Toolbar";
 import Pagination from "./Pagination";
 import Table from "./Table";
@@ -15,21 +15,24 @@ interface DataTableProps {
   data: Inquiry[];
 }
 
-const DataTable: FC<DataTableProps> = ({ data }) => {
+const DataTable: React.FC<DataTableProps> = ({ data }) => {
   const { query, setQueryParams } = useQueryParams();
 
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "",
     direction: "ascending",
   });
-  const [currentPage, setCurrentPage] = useState(() =>
-    parseInt(query.get("page") || "1")
-  );
-  const [entriesPerPage, setEntriesPerPage] = useState(() =>
-    parseInt(query.get("entries") || "10")
-  );
   const [searchQuery, setSearchQuery] = useState(
     () => query.get("search") || ""
+  );
+  const [entriesPerPage, setEntriesPerPage] = useState(() =>
+    parseInt(query.get("entries") || "2")
+  );
+  const [urlPage, setUrlPage] = useState(() =>
+    parseInt(query.get("page") || "1")
+  );
+  const [displayPage, setDisplayPage] = useState(() =>
+    searchQuery ? 1 : urlPage
   );
 
   const filteredData = useMemo(() => {
@@ -45,9 +48,9 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
   }, [filteredData, sortConfig]);
 
   const currentData = useMemo(() => {
-    const start = (currentPage - 1) * entriesPerPage;
+    const start = (displayPage - 1) * entriesPerPage;
     return sortedData.slice(start, start + entriesPerPage);
-  }, [sortedData, currentPage, entriesPerPage]);
+  }, [sortedData, displayPage, entriesPerPage]);
 
   const handleSort = (key: string) => {
     setSortConfig((prevConfig) => ({
@@ -63,18 +66,27 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
     field: string,
     value: string | number
   ) => {
-    if (field === "search") setSearchQuery(value as string);
-    else if (field === "entries") setEntriesPerPage(value as number);
-    setCurrentPage(1);
+    if (field === "search") {
+      setSearchQuery(value as string);
+      setDisplayPage(1);
+    } else if (field === "entries") {
+      setEntriesPerPage(value as number);
+      handlePageChange(1);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setDisplayPage(newPage);
+    setUrlPage(newPage);
   };
 
   useEffect(() => {
     setQueryParams({
-      page: currentPage.toString(),
+      page: urlPage.toString(),
       entries: entriesPerPage.toString(),
       search: searchQuery,
     });
-  }, [currentPage, searchQuery, entriesPerPage]);
+  }, [urlPage, searchQuery, entriesPerPage]);
 
   return (
     <div className="overflow-x-auto bg-white p-4 shadow-sm">
@@ -89,9 +101,9 @@ const DataTable: FC<DataTableProps> = ({ data }) => {
         handleSort={handleSort}
       />
       <Pagination
-        currentPage={currentPage}
+        currentPage={displayPage}
         totalPages={Math.ceil(sortedData.length / entriesPerPage)}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
       />
     </div>
   );
