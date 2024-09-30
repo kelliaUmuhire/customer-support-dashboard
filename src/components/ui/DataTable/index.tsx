@@ -26,7 +26,7 @@ const DataTable: React.FC<DataTableProps> = ({ data }) => {
     () => query.get("search") || ""
   );
   const [entriesPerPage, setEntriesPerPage] = useState(() =>
-    parseInt(query.get("entries") || "2")
+    parseInt(query.get("entries") || "10")
   );
   const [urlPage, setUrlPage] = useState(() =>
     parseInt(query.get("page") || "1")
