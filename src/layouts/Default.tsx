@@ -5,7 +5,7 @@ import Sidebar from "../components/layout/Sidebar";
 import Topbar from "../components/layout/Topbar";
 import { useDispatch } from "react-redux";
 import { setInquiries } from "../store/inquirySlice";
-import { getInquiries } from "../api/inquiries";
+import { INQUIRIES } from "../data/inquiries";
 
 const DefaultLayout: FC = () => {
   const dispatch = useDispatch();
@@ -19,8 +19,7 @@ const DefaultLayout: FC = () => {
 
   const fetchInquiries = useCallback(async () => {
     try {
-      const { data } = await getInquiries();
-      dispatch(setInquiries(data));
+      dispatch(setInquiries(INQUIRIES));
     } catch (error) {
       navigate("/error");
     } finally {
